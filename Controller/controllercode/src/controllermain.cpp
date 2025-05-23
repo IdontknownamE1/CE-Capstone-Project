@@ -33,6 +33,8 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 #define DELAYVAL 500 // Time (in milliseconds) to pause between pixels
 
+void buzzer(int i); // Function prototype for buzzer
+
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
   // Any other board, you can remove this part (but no harm leaving it):
@@ -103,7 +105,7 @@ void buttons()
   }
   else if(buttonState3 == HIGH)
   {
-    //Txmessage.buttonpress = HEXAGON;
+    Txmessage.command = HEXAGON;
   };
   }
   buttonState = digitalRead(buttonPin);
