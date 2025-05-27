@@ -1,7 +1,7 @@
 // NeoPixel Ring simple sketch (c) 2013 Shae Erisson
 // Released under the GPLv3 license to match the rest of the
 // Adafruit NeoPixel library
-#include <c:\Users\Ian\Documents\GitHub\CE-Capstone-Project\SharedCommunication\CommLibrary\Comm Library\src\main.cpp>
+#include <C:\Users\Ian\Documents\GitHub\CE-Capstone-Project\SharedCommunication\CommLibrary\Comm Library\src\CommLib.h>
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
@@ -56,18 +56,46 @@ void setup() {
 void loop() {
   
   pixels.clear(); // Set all pixel colors to 'off'
-
-  if(1==1){
-    buzzer(1);
-    buzzertimer = 0;
-  }
-  if(buzzertimer == 150)
-  {
-  buzzer(0);
-  }
-  else
-  {
-    buzzertimer++;
+    switch (Rxmessage.command) {
+    case START_CONNECTION:
+      theaterChase(pixels.Color(0, 150, 0), 50);
+      break;
+    case ROUND_START:
+      buttons(); // Check for button presses
+      break;
+    case ROUND_WON:
+      // Add your code for ROUND_WON here
+      break;
+    case WRONG_BUTTON:
+      pixels.fill(pixels.Color(150, 0, 0)); // Set all pixels to red
+      pixels.show(); // Update the strip to show the color
+      buzzer(1);
+      break;
+    case ROUND_LOST:
+      pixels.fill(pixels.Color(150, 0, 0)); // Set all pixels to red
+      pixels.show(); // Update the strip to show the color
+      buzzer(1);
+      break;
+    case ROUND_END:
+      // Add your code for ROUND_END here
+      break;
+    case SCORE_UPDATE:
+      score(Rxmessage.data[0]); // Update score based on received data
+      break;
+    case GAME_START:
+      // Add your code for GAME_START here
+      break;
+    case GAME_WON:
+      theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
+      pixels.show(); // Update the strip to show the color
+      break;
+    case GAME_LOST:
+      theaterChase(pixels.Color(150, 0, 0), 50); // Show a red chase effect
+      pixels.show(); // Update the strip to show the color
+      break;
+    default:
+      // Optional: handle unknown command
+      break;
   }
 
 }
@@ -75,44 +103,36 @@ void loop() {
 void buttons()
 {
   while(1){
-  if(buttonState == HIGH)
-  {
-      enum ButtonType {
-    STAR = 1,
-    SQUARE = 0,
-    TRIANGLE = 0,
-    HEXAGON = 0
-  };
-
-  }
-  else if(buttonState1 == HIGH)
-  {
-      enum ButtonType {
-    STAR = 0,
-    SQUARE = 1,
-    TRIANGLE = 0,
-    HEXAGON = 0
-  };
-  }
-  else if(buttonState2 == HIGH)
-  {
-      enum ButtonType {
-    STAR = 0,
-    SQUARE = 0,
-    TRIANGLE = 1,
-    HEXAGON = 0
-  };
-  }
-  else if(buttonState3 == HIGH)
-  {
-    Txmessage.command = HEXAGON;
-  };
-  }
+if(buttonState == HIGH)
+{
+    Controller.transmission.command = BUTTON_PRESS;
+    Controller.transmission.button = STAR;
+    break;
+}
+else if(buttonState1 == HIGH)
+{
+    Controller.transmission.command = BUTTON_PRESS;
+    Controller.transmission.button = SQUARE;
+    break;
+}
+else if(buttonState2 == HIGH)
+{
+    Controller.transmission.command = BUTTON_PRESS;
+    Controller.transmission.button = TRIANGLE;
+    break;
+}
+else if(buttonState3 == HIGH)
+{
+    Controller.transmission.command = BUTTON_PRESS;
+    Controller.transmission.button = HEXAGON;
+    break;
+}
   buttonState = digitalRead(buttonPin);
   buttonState1 = digitalRead(buttonPin1);
   buttonState2 = digitalRead(buttonPin2);
   buttonState3 = digitalRead(buttonPin3);
   }
+}
 
 
 void buzzer(int i)
