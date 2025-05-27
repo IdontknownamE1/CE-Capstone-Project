@@ -6,7 +6,7 @@
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
-
+ControllerSpeak Controller;
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN        1 //led ring pin
 const int buttonPin = 12;  // the number of the pushbutton pin
@@ -15,6 +15,7 @@ const int buttonPin2 = 14;  // the number of the pushbutton pin
 const int buttonPin3 = 11;  // the number of the pushbutton pin
 const int mosfetPin = 15;
 const int id = 1;
+extern ControllerSpeak Controller;
 
 
 #define NUMPIXELS 35 //NeoPixel ring size
@@ -34,6 +35,8 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 #define DELAYVAL 500 // Time (in milliseconds) to pause between pixels
 
 void buzzer(int i); // Function prototype for buzzer
+void theaterChase(uint32_t c, uint8_t wait); // Function prototype for theaterChase
+void buttons(); // Function prototype for buttons
 
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -56,7 +59,7 @@ void setup() {
 void loop() {
   
   pixels.clear(); // Set all pixel colors to 'off'
-    switch (Rxmessage.command) {
+    switch (Controller.reception.command) {
     case START_CONNECTION:
       theaterChase(pixels.Color(0, 150, 0), 50);
       break;
@@ -80,7 +83,7 @@ void loop() {
       // Add your code for ROUND_END here
       break;
     case SCORE_UPDATE:
-      score(Rxmessage.data[0]); // Update score based on received data
+      //score(Rxmessage.data[0]); // Update score based on received data
       break;
     case GAME_START:
       // Add your code for GAME_START here
