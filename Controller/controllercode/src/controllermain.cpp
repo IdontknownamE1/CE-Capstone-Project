@@ -14,9 +14,7 @@ const int buttonPin1 = 13;  // the number of the pushbutton pin
 const int buttonPin2 = 14;  // the number of the pushbutton pin
 const int buttonPin3 = 11;  // the number of the pushbutton pin
 const int mosfetPin = 15;
-const int id = 1;
 extern ControllerSpeak Controller;
-
 
 #define NUMPIXELS 35 //NeoPixel ring size
 int buttonState = digitalRead(buttonPin);
@@ -37,6 +35,7 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 void buzzer(int i); // Function prototype for buzzer
 void theaterChase(uint32_t c, uint8_t wait); // Function prototype for theaterChase
 void buttons(); // Function prototype for buttons
+void score(uint8_t j); // Function prototype for score
 
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -54,6 +53,9 @@ void setup() {
   pinMode(mosfetPin, OUTPUT);
   // Start with the MOSFET off
   digitalWrite(mosfetPin, LOW); // or HIGH for a P-channel MOSFET
+
+  // Set the ID for the controller
+  Controller.transmission.id = 1;
 }
 
 void loop() {
@@ -64,10 +66,12 @@ void loop() {
       theaterChase(pixels.Color(0, 150, 0), 50);
       break;
     case ROUND_START:
-      buttons(); // Check for button presses
+      theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
+      pixels.show(); // Update the strip to show the color
       break;
     case ROUND_WON:
-      // Add your code for ROUND_WON here
+      theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
+      pixels.show(); // Update the strip to show the color
       break;
     case WRONG_BUTTON:
       pixels.fill(pixels.Color(150, 0, 0)); // Set all pixels to red
@@ -80,62 +84,58 @@ void loop() {
       buzzer(1);
       break;
     case ROUND_END:
-      // Add your code for ROUND_END here
+      // Add code
       break;
     case SCORE_UPDATE:
-      //score(Rxmessage.data[0]); // Update score based on received data
+      score(*(Controller.reception.data)); // Update score based on received data
       break;
     case GAME_START:
-      // Add your code for GAME_START here
+      buttons(); // Check for button presses
       break;
     case GAME_WON:
-      theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
+      theaterChase(pixels.Color(0, 150, 0), 1); // Show a green chase effect
       pixels.show(); // Update the strip to show the color
       break;
     case GAME_LOST:
-      theaterChase(pixels.Color(150, 0, 0), 50); // Show a red chase effect
+      theaterChase(pixels.Color(150, 0, 0), 1); // Show a red chase effect
       pixels.show(); // Update the strip to show the color
       break;
     default:
       // Optional: handle unknown command
       break;
   }
+  buttons(); // Check for button presses
 
 }
 
 void buttons()
 {
-  while(1){
+  buttonState = digitalRead(buttonPin);
+  buttonState1 = digitalRead(buttonPin1);
+  buttonState2 = digitalRead(buttonPin2);
+  buttonState3 = digitalRead(buttonPin3);
 if(buttonState == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = STAR;
-    break;
 }
 else if(buttonState1 == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = SQUARE;
-    break;
 }
 else if(buttonState2 == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = TRIANGLE;
-    break;
 }
 else if(buttonState3 == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = HEXAGON;
-    break;
 }
-  buttonState = digitalRead(buttonPin);
-  buttonState1 = digitalRead(buttonPin1);
-  buttonState2 = digitalRead(buttonPin2);
-  buttonState3 = digitalRead(buttonPin3);
   }
-}
+
 
 
 void buzzer(int i)
