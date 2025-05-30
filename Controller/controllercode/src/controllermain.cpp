@@ -22,6 +22,7 @@ int buttonState1 = digitalRead(buttonPin1);
 int buttonState2 = digitalRead(buttonPin2);
 int buttonState3 = digitalRead(buttonPin3);
 int buzzertimer;
+uint8_t currentscore = 0; // Declare currentscore as a global variable
 
 
 // When setting up the NeoPixel library, we tell it how many pixels,
@@ -53,9 +54,9 @@ void setup() {
   pinMode(mosfetPin, OUTPUT);
   // Start with the MOSFET off
   digitalWrite(mosfetPin, LOW); // or HIGH for a P-channel MOSFET
-
   // Set the ID for the controller
   Controller.transmission.id = 1;
+
 }
 
 void loop() {
@@ -64,47 +65,56 @@ void loop() {
     switch (Controller.reception.command) {
     case START_CONNECTION:
       theaterChase(pixels.Color(0, 150, 0), 50);
+      score(currentscore); // Update score based on received data
       break;
     case ROUND_START:
       theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
-      pixels.show(); // Update the strip to show the color
+      score(currentscore); // Update score based on received data
       break;
     case ROUND_WON:
       theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
-      pixels.show(); // Update the strip to show the color
+      buzzer(1); // Activate buzzer
+      score(currentscore); // Update score based on received data
       break;
     case WRONG_BUTTON:
       pixels.fill(pixels.Color(150, 0, 0)); // Set all pixels to red
       pixels.show(); // Update the strip to show the color
       buzzer(1);
+      score(currentscore); // Update score based on received data
       break;
     case ROUND_LOST:
       pixels.fill(pixels.Color(150, 0, 0)); // Set all pixels to red
       pixels.show(); // Update the strip to show the color
       buzzer(1);
+      score(currentscore); // Update score based on received data
       break;
     case ROUND_END:
-      // Add code
+      score(currentscore); // Update score based on received data
       break;
     case SCORE_UPDATE:
-      score(*(Controller.reception.data)); // Update score based on received data
+      currentscore = *(Controller.reception.data);
+      score(currentscore); // Update score based on received data
       break;
     case GAME_START:
       buttons(); // Check for button presses
+      score(currentscore); // Update score based on received data
       break;
     case GAME_WON:
       theaterChase(pixels.Color(0, 150, 0), 1); // Show a green chase effect
-      pixels.show(); // Update the strip to show the color
+      buzzer(1); // Activate buzzer
+      score(currentscore); // Update score based on received data
       break;
     case GAME_LOST:
       theaterChase(pixels.Color(150, 0, 0), 1); // Show a red chase effect
-      pixels.show(); // Update the strip to show the color
+      buzzer(1); // Activate buzzer
+      score(currentscore); // Update score based on received data
       break;
     default:
-      // Optional: handle unknown command
+      score(currentscore); // Update score based on received data
       break;
   }
   buttons(); // Check for button presses
+
 
 }
 
@@ -141,6 +151,8 @@ else if(buttonState3 == HIGH)
 void buzzer(int i)
 {
   digitalWrite(mosfetPin, i); // or LOW for a P-channel MOSFET
+  delay(100); // Wait for 100 milliseconds
+  digitalWrite(mosfetPin, LOW); // Turn off the MOSFET
 }
 
 //Theatre-style crawling lights.
