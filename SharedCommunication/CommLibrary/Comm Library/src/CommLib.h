@@ -17,8 +17,7 @@ enum BaseCommandType {
   SCORE_UPDATE,
   GAME_START,
   GAME_WON,
-  GAME_LOST,
-  UPDATE_SCORE
+  GAME_LOST
 };
 
 enum ControllerCommandType {
@@ -103,6 +102,7 @@ public:
 
   void Init();
   void SendButtonPress(int buttonID);
+  bool ReceiveMessage(RxMessage &msg);
 };
 
 // Global variables
