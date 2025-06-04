@@ -8,20 +8,21 @@
 #endif
 ControllerSpeak Controller;
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN        1 //led ring pin
-const int buttonPin = 12;  // the number of the pushbutton pin
-const int buttonPin1 = 13;  // the number of the pushbutton pin
-const int buttonPin2 = 14;  // the number of the pushbutton pin
-const int buttonPin3 = 11;  // the number of the pushbutton pin
-const int mosfetPin = 15;
+#define PIN        11 //led ring pin
+const int starpin = 12;  // the number of the pushbutton pin
+const int trianglepin = 19;  // the number of the pushbutton pin
+const int hexpin = 18;  // the number of the pushbutton pin
+const int squarepin = 13;  // the number of the pushbutton pin
+const int mosfetPin = 26;
 extern ControllerSpeak Controller;
 
 #define NUMPIXELS 35 //NeoPixel ring size
-int buttonState = digitalRead(buttonPin);
-int buttonState1 = digitalRead(buttonPin1);
-int buttonState2 = digitalRead(buttonPin2);
-int buttonState3 = digitalRead(buttonPin3);
+int starbutton = digitalRead(starpin);
+int trianglebutton = digitalRead(trianglepin);
+int hexbutton = digitalRead(hexpin);
+int squarebutton = digitalRead(squarepin);
 int buzzertimer;
+float currenttime;
 uint8_t currentscore = 0; // Declare currentscore as a global variable
 
 
@@ -45,10 +46,10 @@ void setup() {
   clock_prescale_set(clock_div_1);
 #endif
   // END of Trinket-specific code.
-  buttonState = digitalRead(buttonPin);
-  buttonState1 = digitalRead(buttonPin1);
-  buttonState2 = digitalRead(buttonPin2);
-  buttonState3 = digitalRead(buttonPin3);
+  starbutton = digitalRead(starpin);
+  trianglebutton = digitalRead(trianglepin);
+  hexbutton = digitalRead(hexpin);
+  squarebutton = digitalRead(squarepin);
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
     // Set the GPIO pin as an output
   pinMode(mosfetPin, OUTPUT);
@@ -60,15 +61,17 @@ void setup() {
 }
 
 void loop() {
-  
+      
   pixels.clear(); // Set all pixel colors to 'off'
+  int r = random(150, 255);
+  int b = 0;
+  int g = random(100);
     switch (Controller.reception.command) {
     case START_CONNECTION:
-      theaterChase(pixels.Color(0, 150, 0), 50);
+      theaterChase(pixels.Color(r, g, b), 50); // Set all pixels to a random color
       score(currentscore); // Update score based on received data
       break;
     case ROUND_START:
-      theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
       score(currentscore); // Update score based on received data
       break;
     case ROUND_WON:
@@ -100,12 +103,12 @@ void loop() {
       score(currentscore); // Update score based on received data
       break;
     case GAME_WON:
-      theaterChase(pixels.Color(0, 150, 0), 1); // Show a green chase effect
+      theaterChase(pixels.Color(0, 150, 0), 50); // Show a green chase effect
       buzzer(1); // Activate buzzer
       score(currentscore); // Update score based on received data
       break;
     case GAME_LOST:
-      theaterChase(pixels.Color(150, 0, 0), 1); // Show a red chase effect
+      theaterChase(pixels.Color(150, 0, 0), 50); // Show a red chase effect
       buzzer(1); // Activate buzzer
       score(currentscore); // Update score based on received data
       break;
@@ -115,34 +118,36 @@ void loop() {
   }
   buttons(); // Check for button presses
 
-
+  if(((millis())-currenttime) > 1000) { // Check if 1 second has passed
+    buzzer(0); // Increment the buzzer timer
+  }
 }
 
 void buttons()
 {
-  buttonState = digitalRead(buttonPin);
-  buttonState1 = digitalRead(buttonPin1);
-  buttonState2 = digitalRead(buttonPin2);
-  buttonState3 = digitalRead(buttonPin3);
-if(buttonState == HIGH)
+  starbutton = digitalRead(starpin);
+  trianglebutton = digitalRead(trianglepin);
+  hexbutton = digitalRead(hexpin);
+  squarebutton = digitalRead(squarepin);
+if(starbutton == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = STAR;
 }
-else if(buttonState1 == HIGH)
-{
-    Controller.transmission.command = BUTTON_PRESS;
-    Controller.transmission.button = SQUARE;
-}
-else if(buttonState2 == HIGH)
+else if(trianglebutton == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = TRIANGLE;
 }
-else if(buttonState3 == HIGH)
+else if(hexbutton == HIGH)
 {
     Controller.transmission.command = BUTTON_PRESS;
     Controller.transmission.button = HEXAGON;
+}
+else if(squarebutton == HIGH)
+{
+    Controller.transmission.command = BUTTON_PRESS;
+    Controller.transmission.button = SQUARE;
 }
   }
 
@@ -151,8 +156,7 @@ else if(buttonState3 == HIGH)
 void buzzer(int i)
 {
   digitalWrite(mosfetPin, i); // or LOW for a P-channel MOSFET
-  delay(100); // Wait for 100 milliseconds
-  digitalWrite(mosfetPin, LOW); // Turn off the MOSFET
+  currenttime = millis(); // Update the current time
 }
 
 //Theatre-style crawling lights.
