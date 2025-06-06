@@ -69,6 +69,9 @@ void DeviceSpeak::Write(const void *buf, size_t len) {
 
 // BaseSpeak method implementations
 void BaseSpeak::Init() {
+    while (!Serial) {
+    // some boards need to wait to ensure access to serial over USB
+   }
     if (!radio.begin()) {
         Serial.println("Radio failed to initialize!");
         return;
@@ -119,7 +122,7 @@ void ControllerSpeak::Init() {
     radio.setChannel(1);
     radio.setDataRate(RF24_250KBPS);
     radio.setPALevel(RF24_PA_HIGH);
-    switch (deviceID) {
+    switch (transmission.id) {
         case 1: radio.openWritingPipe(0xF0F0F0F0C1LL); break;
         case 2: radio.openWritingPipe(0xF0F0F0F0C2LL); break;
         case 3: radio.openWritingPipe(0xF0F0F0F0C3LL); break;
