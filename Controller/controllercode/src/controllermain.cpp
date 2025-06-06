@@ -10,8 +10,8 @@ ControllerSpeak Controller;
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN        11 //led ring pin
 const int starpin = 12;  // the number of the pushbutton pin
-const int trianglepin = 19;  // the number of the pushbutton pin
-const int hexpin = 18;  // the number of the pushbutton pin
+const int trianglepin = 9;  // the number of the pushbutton pin
+const int hexpin = 8;  // the number of the pushbutton pin
 const int squarepin = 13;  // the number of the pushbutton pin
 const int mosfetPin = 26;
 extern ControllerSpeak Controller;
