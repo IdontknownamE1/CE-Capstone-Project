@@ -131,23 +131,19 @@ void buttons()
   squarebutton = digitalRead(squarepin);
 if(starbutton == HIGH)
 {
-    Controller.transmission.command = BUTTON_PRESS;
-    Controller.transmission.button = STAR;
+    Controller.SendButtonPress(STAR);
 }
 else if(trianglebutton == HIGH)
 {
-    Controller.transmission.command = BUTTON_PRESS;
-    Controller.transmission.button = TRIANGLE;
+    Controller.SendButtonPress(TRIANGLE);
 }
 else if(hexbutton == HIGH)
 {
-    Controller.transmission.command = BUTTON_PRESS;
-    Controller.transmission.button = HEXAGON;
+    Controller.SendButtonPress(HEXAGON);
 }
 else if(squarebutton == HIGH)
 {
-    Controller.transmission.command = BUTTON_PRESS;
-    Controller.transmission.button = SQUARE;
+    Controller.SendButtonPress(SQUARE);
 }
   }
 
