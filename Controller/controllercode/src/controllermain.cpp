@@ -1,12 +1,13 @@
 // NeoPixel Ring simple sketch (c) 2013 Shae Erisson
 // Released under the GPLv3 license to match the rest of the
 // Adafruit NeoPixel library
-#include <C:\Users\Ian\Documents\GitHub\CE-Capstone-Project\SharedCommunication\CommLibrary\Comm Library\src\CommLib.h>
+#include <CommLib.h>
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
-ControllerSpeak Controller;
+
+
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN        11 //led ring pin
 const int starpin = 12;  // the number of the pushbutton pin

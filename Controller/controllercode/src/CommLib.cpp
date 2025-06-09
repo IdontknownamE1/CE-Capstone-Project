@@ -133,10 +133,9 @@ void ControllerSpeak::Init() {
     radio.startListening();
 }
 
-void ControllerSpeak::SendButtonPress(int buttonID) {
-    transmission.id = buttonID;
+void ControllerSpeak::SendButtonPress(ButtonType button) {
     transmission.command = BUTTON_PRESS;
-    transmission.button = static_cast<ButtonType>(buttonID);
+    transmission.button = button;
     radio.stopListening();
     radio.write(&transmission, sizeof(transmission));
     radio.startListening();
