@@ -1,9 +1,22 @@
+#define CE_PIN 20
+#define CSN_PIN PICO_DEFAULT_SPI_CSN_PIN
+
 #include <Arduino.h>
 #include "RF24.h"
 #include "CommLib.h"
 
+
 // Instantiate an object for the nRF24L01 transceiver
 RF24 radio(CE_PIN, CSN_PIN);
+
+// Debug utility to print radio status and FIFO status
+void printRadioStatus(const char* tag) {
+    uint8_t status = radio.getStatusFlags();
+    radio.printStatus(status);
+    radio.printPrettyDetails();
+    Serial.print("["); Serial.print(tag); Serial.print("] ");
+    Serial.print("STATUS=0x"); Serial.print(status, HEX);
+}
 
 // DeviceSpeak method implementations
 void DeviceSpeak::Init() {
@@ -70,21 +83,37 @@ void DeviceSpeak::Write(const void *buf, size_t len) {
 // BaseSpeak method implementations
 void BaseSpeak::Init() {
     while (!Serial) {
-    // some boards need to wait to ensure access to serial over USB
+        // some boards need to wait to ensure access to serial over USB
    }
-    if (!radio.begin()) {
-        Serial.println("Radio failed to initialize!");
-        return;
+    while (true) {
+        radio.powerDown();
+        delay(10);
+        radio.powerUp();
+        radio.flush_rx();
+        radio.flush_tx();
+        printRadioStatus("Before begin");
+        if (radio.begin()) {
+            break;
+        }
+        Serial.println("ERROR: radio.begin() failed! Retrying in 1s. Check wiring and power.");
+        delay(1000);
     }
+    printRadioStatus("After begin");
     radio.setChannel(1);
     radio.setDataRate(RF24_250KBPS);
     radio.setPALevel(RF24_PA_HIGH);
+    radio.setCRCLength(RF24_CRC_16);
+    radio.setAddressWidth(5);
+    radio.disableDynamicPayloads(); // Use static payloads for debugging
+    radio.setPayloadSize(sizeof(RxMessage));
     radio.openReadingPipe(1, 0xF0F0F0F0C1LL);
-    radio.openReadingPipe(2, 0xF0F0F0F0C2LL);
-    radio.openReadingPipe(3, 0xF0F0F0F0C3LL);
-    radio.openReadingPipe(4, 0xF0F0F0F0C4LL);
     radio.openWritingPipe(0xF0F0F0F0BBLL);
+    radio.flush_rx();
+    radio.flush_tx();
+    radio.printPrettyDetails();
+    radio.printStatus(radio.getStatusFlags());
     radio.startListening();
+    printRadioStatus("After startListening");
 }
 
 void BaseSpeak::SendMessage(TxMessage msg) {
@@ -98,39 +127,58 @@ void BaseSpeak::SendMessage(TxMessage msg) {
 }
 
 bool BaseSpeak::ReceiveMessage(RxMessage &msg) {
+    printRadioStatus("Before available");
     if (radio.available()) {
         radio.read(&msg, sizeof(msg));
-        return true;
+        radio.flush_rx();
+        printRadioStatus("After read+flush");
+        if (msg.id >= 1 && msg.id <= 4) {
+            return true;
+        }
     }
+    printRadioStatus("After available (no msg)");
     return false;
 }
 
 bool BaseSpeak::PollController(RxMessage &msg) {
     if (Available()) {
-        ReceiveMessage(msg);
-        return true;
+        bool got = ReceiveMessage(msg);
+        return got;
     }
     return false;
 }
 
 // ControllerSpeak method implementations
 void ControllerSpeak::Init() {
-    if (!radio.begin()) {
-        Serial.println("Radio failed to initialize!");
-        return;
+    while (true) {
+        radio.powerDown();
+        delay(10);
+        radio.powerUp();
+        radio.flush_rx();
+        radio.flush_tx();
+        printRadioStatus("Before begin");
+        if (radio.begin()) {
+            break;
+        }
+        Serial.println("ERROR: radio.begin() failed! Retrying in 1s. Check wiring and power.");
+        delay(1000);
     }
+    printRadioStatus("After begin");
     radio.setChannel(1);
     radio.setDataRate(RF24_250KBPS);
     radio.setPALevel(RF24_PA_HIGH);
-    switch (transmission.id) {
-        case 1: radio.openWritingPipe(0xF0F0F0F0C1LL); break;
-        case 2: radio.openWritingPipe(0xF0F0F0F0C2LL); break;
-        case 3: radio.openWritingPipe(0xF0F0F0F0C3LL); break;
-        case 4: radio.openWritingPipe(0xF0F0F0F0C4LL); break;
-        default: radio.openWritingPipe(0xF0F0F0F0EELL); break;
-    }
+    radio.setCRCLength(RF24_CRC_16);
+    radio.setAddressWidth(5);
+    radio.disableDynamicPayloads();
+    radio.setPayloadSize(sizeof(RxMessage));
+    radio.openWritingPipe(0xF0F0F0F0C1LL);
     radio.openReadingPipe(1, 0xF0F0F0F0BBLL);
+    radio.flush_rx();
+    radio.flush_tx();
+    radio.printPrettyDetails();
+    radio.printStatus(radio.getStatusFlags());
     radio.startListening();
+    printRadioStatus("After startListening");
 }
 
 void ControllerSpeak::SendButtonPress(ButtonType button) {
@@ -142,15 +190,21 @@ void ControllerSpeak::SendButtonPress(ButtonType button) {
 }
 
 bool ControllerSpeak::ReceiveMessage(RxMessage &msg) {
+    printRadioStatus("Before available");
     if (radio.available()) {
         radio.read(&msg, sizeof(msg));
-        return true;
+        radio.flush_rx();
+        printRadioStatus("After read+flush");
+        if (msg.id >= 1 && msg.id <= 4) {
+            return true;
+        }
     }
+    printRadioStatus("After available (no msg)");
     return false;
 }
 
 // Global variables
-uint8_t isBase = 1;
+uint8_t isBase = 0; // 0 for Controller, 1 for Base
 BaseSpeak Station;
 ControllerSpeak Controller;
 
@@ -173,6 +227,8 @@ void CommSetup() {
 
 void CommLoop() {
     digitalWrite(25, LOW);
+    // Flush RX FIFO before checking for available messages
+    radio.flush_rx();
     switch (isBase) {
         case 0:
             if (Controller.Available()) {
