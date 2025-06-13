@@ -95,7 +95,7 @@ void parseUartMessage(const char* msg) {
   int b = 0;
   int g = random(100);
   if (strncmp(msg, "C", 1) == 0 && strlen(msg) == 2) {
-    char command = msg[1];
+    int command = (int)msg[1];
     switch (command) {
     case START_CONNECTION:
       theaterChase(pixels.Color(r, g, b), 50); // Set all pixels to a random color
@@ -125,7 +125,6 @@ void parseUartMessage(const char* msg) {
       score(currentscore); // Update score based on received data
       break;
     case SCORE_UPDATE:
-      currentscore = (int(Serial1.read()));
       score(currentscore); // Update score based on received data
       break;
     case GAME_START:
@@ -146,6 +145,9 @@ void parseUartMessage(const char* msg) {
       score(currentscore); // Update score based on received data
       break;
   }
+}
+  if (strncmp(msg, "S", 1) == 0 && strlen(msg) == 2) {
+    currentscore = (int)msg[1];
     }
     }
 
@@ -157,22 +159,22 @@ void buttons()
   squarebutton = digitalRead(squarepin);
 if(starbutton == HIGH)
 {
-  Serial1.write(STAR); // Send the STAR button press command
+  Serial1.println("B1");
     //Controller.SendButtonPress(STAR);
 }
 else if(trianglebutton == HIGH)
 {
-  Serial1.write(TRIANGLE); // Send the TRIANGLE button press command
+  Serial1.println("B3");
     //Controller.SendButtonPress(TRIANGLE);
 }
 else if(hexbutton == HIGH)
 {
-  Serial1.write(HEXAGON); // Send the HEXAGON button press command
+  Serial1.println("B2");
     //Controller.SendButtonPress(HEXAGON);
 }
 else if(squarebutton == HIGH)
 {
-  Serial1.write(SQUARE); // Send the SQUARE button press command
+  Serial1.println("B0");
     //Controller.SendButtonPress(SQUARE);
 }
   }
