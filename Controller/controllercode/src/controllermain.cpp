@@ -16,6 +16,7 @@ const int hexpin = 8;  // the number of the pushbutton pin
 const int squarepin = 13;  // the number of the pushbutton pin
 const int mosfetPin = 26;
 extern ControllerSpeak Controller;
+UART Serial1(21, 22); // RX, TX pins for UART communication
 
 #define NUMPIXELS 35 //NeoPixel ring size
 int starbutton = digitalRead(starpin);
@@ -40,6 +41,10 @@ void theaterChase(uint32_t c, uint8_t wait); // Function prototype for theaterCh
 void buttons(); // Function prototype for buttons
 void score(uint8_t j); // Function prototype for score
 
+#define UART_BUFFER_SIZE 16
+char uartBuffer[UART_BUFFER_SIZE];
+uint8_t uartIndex = 0;
+
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
   // Any other board, you can remove this part (but no harm leaving it):
@@ -58,16 +63,40 @@ void setup() {
   digitalWrite(mosfetPin, LOW); // or HIGH for a P-channel MOSFET
   // Set the ID for the controller
   Controller.transmission.id = 1;
-
+  Serial1.begin(9600);
 }
 
 void loop() {
       
+
+   while (Serial1.available() > 0) {
+    char c = Serial1.read();
+    if (c == '\n' || c == '\r') {
+      uartBuffer[uartIndex] = '\0'; // Null-terminate
+      parseUartMessage(uartBuffer);
+      uartIndex = 0; // Reset for next message
+    } else if (uartIndex < UART_BUFFER_SIZE - 1) {
+      uartBuffer[uartIndex++] = c;
+    } else {
+      uartIndex = 0; // Buffer overflow, reset
+    }
+  }
+    
+  buttons(); // Check for button presses
+
+  if(((millis())-currenttime) > 1000) { // Check if 1 second has passed
+    buzzer(0); // Increment the buzzer timer
+  }
+}
+// Parse UART message and act accordingly
+void parseUartMessage(const char* msg) {
   pixels.clear(); // Set all pixel colors to 'off'
   int r = random(150, 255);
   int b = 0;
   int g = random(100);
-    switch (Controller.reception.command) {
+  if (strncmp(msg, "C", 1) == 0 && strlen(msg) == 2) {
+    char command = msg[1];
+    switch (command) {
     case START_CONNECTION:
       theaterChase(pixels.Color(r, g, b), 50); // Set all pixels to a random color
       score(currentscore); // Update score based on received data
@@ -96,7 +125,7 @@ void loop() {
       score(currentscore); // Update score based on received data
       break;
     case SCORE_UPDATE:
-      currentscore = *(Controller.reception.data);
+      currentscore = (int(Serial1.read()));
       score(currentscore); // Update score based on received data
       break;
     case GAME_START:
@@ -117,12 +146,8 @@ void loop() {
       score(currentscore); // Update score based on received data
       break;
   }
-  buttons(); // Check for button presses
-
-  if(((millis())-currenttime) > 1000) { // Check if 1 second has passed
-    buzzer(0); // Increment the buzzer timer
-  }
-}
+    }
+    }
 
 void buttons()
 {
@@ -132,19 +157,23 @@ void buttons()
   squarebutton = digitalRead(squarepin);
 if(starbutton == HIGH)
 {
-    Controller.SendButtonPress(STAR);
+  Serial1.write(STAR); // Send the STAR button press command
+    //Controller.SendButtonPress(STAR);
 }
 else if(trianglebutton == HIGH)
 {
-    Controller.SendButtonPress(TRIANGLE);
+  Serial1.write(TRIANGLE); // Send the TRIANGLE button press command
+    //Controller.SendButtonPress(TRIANGLE);
 }
 else if(hexbutton == HIGH)
 {
-    Controller.SendButtonPress(HEXAGON);
+  Serial1.write(HEXAGON); // Send the HEXAGON button press command
+    //Controller.SendButtonPress(HEXAGON);
 }
 else if(squarebutton == HIGH)
 {
-    Controller.SendButtonPress(SQUARE);
+  Serial1.write(SQUARE); // Send the SQUARE button press command
+    //Controller.SendButtonPress(SQUARE);
 }
   }
 
